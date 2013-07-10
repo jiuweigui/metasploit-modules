@@ -80,7 +80,7 @@ class Metasploit3 < Msf::Post
 				# Finding the NAME / WORKS NEEDS CLEANUP
 				# Looks for the executable name from the prefetch file
 	
-				client.railgun.kernel32.SetFilePointer(handle['return'], n_offset, 0, 0)
+				client.railgun.kernel32.SetFilePointer(handle['return'], n_offset, 0, nil)
 				name = client.railgun.kernel32.ReadFile(handle['return'], 60, 60, 4, nil)
 				pname = name['lpBuffer']
 
@@ -93,22 +93,23 @@ class Metasploit3 < Msf::Post
 				
 				# Finding the LastRun
 				# Tries to find the FILETIME from the prefetch file // BROKEN
-				client.railgun.kernel32.SetFilePointer(handle['return'], l_offset, 0, 0) 
-				tm1 = client.railgun.kernel32.ReadFile(handle['return'], 32, 32, 4, nil)
+				client.railgun.kernel32.SetFilePointer(handle['return'], l_offset, 0, nil) 
+				tm1 = client.railgun.kernel32.ReadFile(handle['return'], 16, 16, 4, nil)
+
 				time = tm1['lpBuffer'].unpack('q*')	
 				#print_line("#{time}")
 	
 				# RunCount / WORKS
 				# Finds the run count from the prefetch file	
 	
-				client.railgun.kernel32.SetFilePointer(handle['return'], c_offset, 0, 0)
+				client.railgun.kernel32.SetFilePointer(handle['return'], c_offset, 0, nil)
 				count = client.railgun.kernel32.ReadFile(handle['return'], 4, 4, 4, nil)
 				prun = count['lpBuffer'].unpack('C*')
 
 
 
 				# Prints the results
-				print_line("#{pname}\t\t#{time[0]}\t#{prun[0]}")
+				print_line("#{pname}\t\t#{time}\t#{prun[0]}")
 	
 			client.railgun.kernel32.CloseHandle(handle['return'])
 		end
