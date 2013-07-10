@@ -49,7 +49,7 @@ class Metasploit3 < Msf::Post
 
                         end
 
-	
+		# Needs to add check to make sure the path is found 
 		print_good("Filename\t\t\t\tLastRunTime\t Run Count\t")
 		filename = 0	
 		sysroot = client.fs.file.expand_path("%SYSTEMROOT%")
@@ -97,8 +97,8 @@ class Metasploit3 < Msf::Post
 				# Finding the LastRun
 				# Tries to find the FILETIME from the prefetch file // BROKEN
 				client.railgun.kernel32.SetFilePointer(handle['return'], l_offset, 0, 0) 
-				tm1 = client.railgun.kernel32.ReadFile(handle['return'], 8, 8, 4, nil)
-				time = tm1['lpBuffer'].unpack('h*')	
+				tm1 = client.railgun.kernel32.ReadFile(handle['return'], 32, 32, 4, nil)
+				time = tm1['lpBuffer'].unpack('q*')	
 				#print_line("#{time}")
 	
 				# RunCount / WORKS
@@ -111,7 +111,7 @@ class Metasploit3 < Msf::Post
 
 
 				# Prints the results
-				print_line("#{pname}\t\t#{time}\t#{prun[0]}")
+				print_line("#{pname}\t\t#{time[0]}\t#{prun[0]}")
 	
 			client.railgun.kernel32.CloseHandle(handle['return'])
 		end
