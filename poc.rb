@@ -85,7 +85,7 @@ class Metasploit3 < Msf::Post
 				pname = name['lpBuffer']
 
 
-				# Finding the HASH / BROKEN / MAYBE LATER
+				# Finding the HASH / BROKEN / MAYBE LATER, MORE USEFUL IN LOOT.TXT
 				#client.railgun.kernel32.SetFilePointer(handle['return'], h_offset, 0, 0)
 				#hash = client.railgun.kernel32.ReadFile(handle['return'], 4, 4, 4, nil)
 				#phash = hash['lpBuffer'].unpack('L*')			
@@ -96,12 +96,10 @@ class Metasploit3 < Msf::Post
 				
 				# Finding the LastRun
 				# Tries to find the FILETIME from the prefetch file // BROKEN
-	
 				client.railgun.kernel32.SetFilePointer(handle['return'], l_offset, 0, 0) 
 				tm1 = client.railgun.kernel32.ReadFile(handle['return'], 8, 8, 4, nil)
-				time = tm1['lpBuffer'].unpack('LL*')
-
-
+				time = tm1['lpBuffer'].unpack('h*')	
+				#print_line("#{time}")
 	
 				# RunCount / WORKS
 				# Finds the run count from the prefetch file	
