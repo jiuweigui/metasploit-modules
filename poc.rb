@@ -131,10 +131,10 @@ class Metasploit3 < Msf::Post
 
                 if sysnfo =~/(Windows XP|2003)/
                         print_status("Detected Windows XP|2003")
-                        n_offset = 0x0010 #16 # Offset for NAME on XP
-			h_offset = 0x004C # Offset for HASH on XP
-			l_offset = 0x0078 # Offset for LastRun on XP
-			c_offset = 0x0090 # Offset for RUN COUNT on XP
+                        n_offset = 0x0010 #16 # Offset for NAME on XP/2003
+			h_offset = 0x004C # Offset for HASH on XP/2003
+			l_offset = 0x0078 # Offset for LastRun on XP/2003
+			c_offset = 0x0090 # Offset for RUN COUNT on XP/2003
                 else
                         print_error("Error")
                 end
