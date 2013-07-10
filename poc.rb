@@ -47,8 +47,9 @@ class Metasploit3 < Msf::Post
                                 print_error("Error?")
 
                         end
+
 	
-		print_good("Filename\t\t\t\t\t Hash\t\tLastRunTime\t Run Count\t")
+		print_good("Filename\t\t\t\tLastRunTime\t Run Count\t")
 		filename = 0	
 		sysroot = client.fs.file.expand_path("%SYSTEMROOT%")
 		#print_status("DEBUG: #{sysroot}")
@@ -60,6 +61,7 @@ class Metasploit3 < Msf::Post
 			filename = ("#{file['path']}\\#{file['name']}")
 			check_offsets(n_offset, h_offset, l_offset, c_offset, filename)	
 			#print_status("#{filename}")
+		
 		end
 			
 	end
@@ -82,27 +84,29 @@ class Metasploit3 < Msf::Post
 				#print_status(pname)
 
 
-				# Finding the HASH / BROKEN	
-				client.railgun.kernel32.SetFilePointer(handle['return'], h_offset, 0, 0)
-				hash = client.railgun.kernel32.ReadFile(handle['return'], 4, 4, 4, nil)
-				#phash = hash['lpBuffer'].unpack('h*')
-				phash = "BROKEN"			
-
-	
+				# Finding the HASH / BROKEN / MAYBE LATER
+				#client.railgun.kernel32.SetFilePointer(handle['return'], h_offset, 0, 0)
+				#hash = client.railgun.kernel32.ReadFile(handle['return'], 4, 4, 4, nil)
+				#phash = hash['lpBuffer'].unpack('L*')			
+				#phash = "BROKEN"
+				#phash = hash['lpBuffer'].unpack('H*')
+				
 				# Finding the LastRun	/ BROKEN
 				client.railgun.kernel32.SetFilePointer(handle['return'], l_offset, 0, 0) 
-				lrun = 	client.railgun.kernel32.ReadFile(handle['return'], 8, 8, 4, nil)
-				#print_error("Last Runtime: #{lrun['lpBuffer']}")
-				ptime = "BROKEN"
-
+				tm1 = client.railgun.kernel32.ReadFile(handle['return'], 8, 8, 4, nil)
+				time = tm1['lpBuffer'].unpack('V*')
+				#time = "BROKEN"
+	
 				# RunCount / WORKS
 	
 				client.railgun.kernel32.SetFilePointer(handle['return'], c_offset, 0, 0)
 				count = client.railgun.kernel32.ReadFile(handle['return'], 4, 4, 4, nil)
 				prun = count['lpBuffer'].unpack('C*')
-				#print_good("Run Count: %s" % prun)
-				print_line("#{pname}\t\t\t#{phash}\t\t#{ptime}\t#{prun[0]}")
-				#print_status("DEBUG Closing file handle")
+
+
+
+				# Prints the results
+				print_line("#{pname}\t\t#{time}\t#{prun[0]}")
 	
 			client.railgun.kernel32.CloseHandle(handle['return'])
 		end
