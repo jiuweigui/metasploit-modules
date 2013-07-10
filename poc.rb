@@ -88,9 +88,6 @@ class Metasploit3 < Msf::Post
 				# Finding the HASH / BROKEN / MAYBE LATER, MORE USEFUL IN LOOT.TXT
 				#client.railgun.kernel32.SetFilePointer(handle['return'], h_offset, 0, 0)
 				#hash = client.railgun.kernel32.ReadFile(handle['return'], 4, 4, 4, nil)
-				#phash = hash['lpBuffer'].unpack('L*')			
-				#phash = "BROKEN"
-				#phash = hash['lpBuffer'].unpack('H*')
 
 
 				
