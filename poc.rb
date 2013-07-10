@@ -39,7 +39,7 @@ class Metasploit3 < Msf::Post
                         if vkey == 0
                                 print_error("(0) = Disabled (Non-Default).")
                         elsif vkey == 1
-                                print_good("(1) = Application lauch prefetching enabled (Non-Default).")
+                                print_good("(1) = Application launch prefetching enabled (Non-Default).")
                         elsif vkey == 2
                                 print_good("(2) = Boot prefetching enabled (Non-Default).")
                         elsif vkey == 3
