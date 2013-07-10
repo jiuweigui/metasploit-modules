@@ -104,7 +104,7 @@ class Metasploit3 < Msf::Post
 				print_line("#{pname}\t\t\t#{phash}\t\t#{ptime}\t#{prun[0]}")
 				#print_status("DEBUG Closing file handle")
 	
-		client.railgun.kernel32.CloseHandle(handle['return'])
+			client.railgun.kernel32.CloseHandle(handle['return'])
 		end
 	end
 
@@ -139,10 +139,6 @@ class Metasploit3 < Msf::Post
                         print_error("Error")
                 end
 		
-		#print_status("DEBUG Name offset: #{n_offset}")
-		#print_status("DEBUG Hash offset: #{h_offset}")
-		#print_status("DEBUG LastRun offset: #{l_offset}")
-		#print_status("DEBUG Count offset: #{c_offset}")
 		
 		check_stuff(n_offset, h_offset, l_offset, c_offset) # Runs everything
 		print_good("All Done..")	
