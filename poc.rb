@@ -31,6 +31,7 @@ class Metasploit3 < Msf::Post
 	def check_stuff(n_offset, l_offset, h_offset, c_offset)
 
 		# Reads Prefetch key from registry and prints its value
+		
 		key = session.sys.registry.open_key(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session\ Manager\\Memory\ Management\\PrefetchParameters", KEY_READ)
 		vkey = key.query_value("EnablePrefetcher").data
 		
@@ -77,11 +78,11 @@ class Metasploit3 < Msf::Post
                         else
 
 				# Finding the NAME / WORKS NEEDS CLEANUP
-				#print_status("DEBUG Getting Name Handle.")
+				# Looks for the executable name from the prefetch file
+	
 				client.railgun.kernel32.SetFilePointer(handle['return'], n_offset, 0, 0)
 				name = client.railgun.kernel32.ReadFile(handle['return'], 60, 60, 4, nil)
 				pname = name['lpBuffer']
-				#print_status(pname)
 
 
 				# Finding the HASH / BROKEN / MAYBE LATER
@@ -90,14 +91,20 @@ class Metasploit3 < Msf::Post
 				#phash = hash['lpBuffer'].unpack('L*')			
 				#phash = "BROKEN"
 				#phash = hash['lpBuffer'].unpack('H*')
+
+
 				
-				# Finding the LastRun	/ BROKEN
+				# Finding the LastRun
+				# Tries to find the FILETIME from the prefetch file // BROKEN
+	
 				client.railgun.kernel32.SetFilePointer(handle['return'], l_offset, 0, 0) 
 				tm1 = client.railgun.kernel32.ReadFile(handle['return'], 8, 8, 4, nil)
-				time = tm1['lpBuffer'].unpack('V*')
-				#time = "BROKEN"
+				time = tm1['lpBuffer'].unpack('LL*')
+
+
 	
 				# RunCount / WORKS
+				# Finds the run count from the prefetch file	
 	
 				client.railgun.kernel32.SetFilePointer(handle['return'], c_offset, 0, 0)
 				count = client.railgun.kernel32.ReadFile(handle['return'], 4, 4, 4, nil)
@@ -144,7 +151,7 @@ class Metasploit3 < Msf::Post
                 end
 		
 		
-		check_stuff(n_offset, h_offset, l_offset, c_offset) # Runs everything
+		check_stuff(n_offset, h_offset, l_offset, c_offset) # Runs everything ATM
 		print_good("All Done..")	
 
 
