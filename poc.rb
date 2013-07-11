@@ -59,7 +59,8 @@ class Metasploit3 < Msf::Post
 		file_type = "*.pf"
 		getfile_prefetch_filenames = client.fs.file.search(full_path,file_type,recurse=false,timeout=-1)
 		getfile_prefetch_filenames.each do |file|
-			filename = ("#{file['path']}\\#{file['name']}")
+			#filename = ("#{file['path']}\\#{file['name']}")
+			filename = File.join(file['path'], file['name'])
 			check_offsets(n_offset, h_offset, l_offset, c_offset, filename)	
 			#print_status("#{filename}")
 		
@@ -130,7 +131,7 @@ class Metasploit3 < Msf::Post
 		begin
 		
 
-		filename = nil
+		filename = 0
 
 		print_status("Running it...")
 		
