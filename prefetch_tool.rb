@@ -12,14 +12,13 @@ require 'msf/core/post/windows/registry'
 
 class Metasploit3 < Msf::Post
         include Msf::Post::Windows::Priv
-	include Msf::Post::File
 	
         def initialize(info={})
                 super(update_info(info,
                         'Name'          =>      'Prefetch Tool',
                         'Description'   =>       %q{ Gathers information from Windows Prefetch files.},
                         'License'       =>      MSF_LICENSE,
-                        'Author'        =>      ['jiuweigui'],
+                        'Author'        =>      ['Timo Glad <fraktaali[at]gmail.com>'],
                         'Platform'      =>      ['win'],
                         'SessionType'   =>      ['meterpreter']
                 ))
@@ -49,7 +48,7 @@ class Metasploit3 < Msf::Post
                         elsif key_value == 3
                                 print_good("(3) = Applaunch and boot enabled (Default Value).")
                         else
-                                print_error("No value.")
+                                print_error("No proper value.")
 
                         end
 
@@ -65,7 +64,7 @@ class Metasploit3 < Msf::Post
 
 		if h['GetLastError'] != 0
 
-                                print_error("There was error!")
+                                print_error("Error opening a file handle.")
                                 return nil
                         else
 
@@ -123,7 +122,6 @@ class Metasploit3 < Msf::Post
 
 	begin
 
-		print_status("Running it..")
 
 		sysnfo = client.sys.config.sysinfo['OS']
 
@@ -139,7 +137,7 @@ class Metasploit3 < Msf::Post
 			lastrun_offset = 0x78 # Offset for LastRun in XP / 2003
 			runcount_offset = 0x90 # Offset for RunCount in XP / 2003
 		else
-			print_error("No offsets for this Windows version.")
+			print_error("No offsets for the target Windows version.")
 
 		end
 
@@ -156,7 +154,7 @@ class Metasploit3 < Msf::Post
 		full_path = sysroot + "\\Prefetch\\"
 		file_type = "*.pf"
 		
-		print_line("\tFiletime\tRunCount\tHash\t\tFilename(from pf)\t\t\t\t\tFilename\n")
+		print_line("\n\tFiletime\tRunCount\tHash\t\tFilename (from prefetch file)\t\t\t\t\tFilename (from prefetch directory)\n")
 
 				
 		getfile_prefetch_filenames = client.fs.file.search(full_path,file_type,recurse=false,timeout=-1)
@@ -176,7 +174,7 @@ class Metasploit3 < Msf::Post
 
 
 
-		print_good("All prefetch files done.")	
+		print_good("Finished gathering information from prefetch files.")	
 
 
 
