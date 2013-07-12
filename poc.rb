@@ -10,11 +10,10 @@ require 'rex'
 require 'msf/core/post/windows/registry'
 
 
-
-
 class Metasploit3 < Msf::Post
         include Msf::Post::Windows::Priv
-
+	include Msf::Post::File
+	
         def initialize(info={})
                 super(update_info(info,
                         'Name'          =>      'ExampleTool',
@@ -28,132 +27,145 @@ class Metasploit3 < Msf::Post
         end
 
 
-	def check_stuff(n_offset, l_offset, h_offset, c_offset)
+	# Checks if Prefetch registry key exists and what value it has.
 
-		# Reads Prefetch key from registry and prints its value
+	
+	def prefetch_key_value()
+
+		reg_key = session.sys.registry.open_key(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session\ Manager\\Memory\ Management\\PrefetchParameters", KEY_READ)
+                key_value = reg_key.query_value("EnablePrefetcher").data
+
 		
-		key = session.sys.registry.open_key(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Control\\Session\ Manager\\Memory\ Management\\PrefetchParameters", KEY_READ)
-		vkey = key.query_value("EnablePrefetcher").data
-		
-		print_status("EnablePrefetcher Value: #{vkey}")
-                        if vkey == 0
+		 print_status("EnablePrefetcher Value: #{key_value}")
+
+                        if key_value == 0
                                 print_error("(0) = Disabled (Non-Default).")
-                        elsif vkey == 1
+                        elsif key_value == 1
                                 print_good("(1) = Application launch prefetching enabled (Non-Default).")
-                        elsif vkey == 2
+                        elsif key_value == 2
                                 print_good("(2) = Boot prefetching enabled (Non-Default).")
-                        elsif vkey == 3
+                        elsif key_value == 3
                                 print_good("(3) = Applaunch and boot enabled (Default Value).")
                         else
-                                print_error("Error?")
+                                print_error("No value.")
 
                         end
 
-		# Needs to add check to make sure the path is found 
-		print_good("Filename\t\t\t\tLastRunTime\t Run Count\t")
-		filename = 0	
-		sysroot = client.fs.file.expand_path("%SYSTEMROOT%")
-		#print_status("DEBUG: #{sysroot}")
-		full_path = sysroot + "\\Prefetch\\"
-		#print_status("DEBUG: #{full_path}")
-		file_type = "*.pf"
-		getfile_prefetch_filenames = client.fs.file.search(full_path,file_type,recurse=false,timeout=-1)
-		getfile_prefetch_filenames.each do |file|
-			#filename = ("#{file['path']}\\#{file['name']}")
-			filename = File.join(file['path'], file['name'])
-			check_offsets(n_offset, h_offset, l_offset, c_offset, filename)	
-			#print_status("#{filename}")
-		
-		end
-			
 	end
 
+	
+	
+	def gather_info(name_offset, hash_offset, lastrun_offset, runcount_offset, filename)
 
-	def check_offsets(n_offset, h_offset, l_offset, c_offset, filename)
+		# This function seeks and gathers information from specific offsets.
 
-		handle = client.railgun.kernel32.CreateFileA(filename, "GENERIC_READ", "FILE_SHARE_DELETE|FILE_SHARE_READ|FILE_SHARE_WRITE", nil, "OPEN_EXISTING", "FILE_ATTRIBUTE_NORMAL", 0)
-		
-		if handle['GetLastError'] != 0
+		h = client.railgun.kernel32.CreateFileA(filename, "GENERIC_READ", "FILE_SHARE_DELETE|FILE_SHARE_READ|FILE_SHARE_WRITE", nil, "OPEN_EXISTING", "FILE_ATTRIBUTE_NORMAL", 0)
+
+		if h['GetLastError'] != 0
+
                                 print_error("There was error!")
                                 return nil
                         else
 
-				# Finding the NAME / WORKS NEEDS CLEANUP
-				# Looks for the executable name from the prefetch file
-	
-				client.railgun.kernel32.SetFilePointer(handle['return'], n_offset, 0, nil)
-				name = client.railgun.kernel32.ReadFile(handle['return'], 60, 60, 4, nil)
-				pname = name['lpBuffer']
+				handle = h['return']
 
+				# Looks for the FILENAME offset, ON SECOND THOUGHT WILL WORK BETTER ON LOOT
 
-				# Finding the HASH / BROKEN / MAYBE LATER, MORE USEFUL IN LOOT.TXT
-				#client.railgun.kernel32.SetFilePointer(handle['return'], h_offset, 0, 0)
-				#hash = client.railgun.kernel32.ReadFile(handle['return'], 4, 4, 4, nil)
-
-
+				#client.railgun.kernel32.SetFilePointer(handle, name_offset, 0, nil)
+                                #name = client.railgun.kernel32.ReadFile(handle, 60, 60, 4, nil)
+                                #x = name['lpBuffer']
+				#print_line(x)
 				
-				# Finding the LastRun
-				# Tries to find the FILETIME from the prefetch file // BROKEN
-				client.railgun.kernel32.SetFilePointer(handle['return'], l_offset, 0, nil) 
-				tm1 = client.railgun.kernel32.ReadFile(handle['return'], 16, 16, 4, nil)
 
-				time = tm1['lpBuffer'].unpack('q*')	
-				#print_line("#{time}")
-	
 				# RunCount / WORKS
-				# Finds the run count from the prefetch file	
-	
-				client.railgun.kernel32.SetFilePointer(handle['return'], c_offset, 0, nil)
-				count = client.railgun.kernel32.ReadFile(handle['return'], 4, 4, 4, nil)
-				prun = count['lpBuffer'].unpack('C*')
+                                # Finds the run count from the prefetch file    
+
+                                client.railgun.kernel32.SetFilePointer(handle, runcount_offset, 0, nil)
+                                count = client.railgun.kernel32.ReadFile(handle, 4, 4, 4, nil)
+                                prun = count['lpBuffer'].unpack('L*')
 
 
+				# Looks for the FILETIME offset / WORKS, sort of at least..
+				# Need to find a way to convert FILETIME to LOCAL TIME etc...
+				client.railgun.kernel32.SetFilePointer(handle, lastrun_offset, 0, 0)
+                                tm1 = client.railgun.kernel32.ReadFile(handle, 8, 8, 4, nil)
+                                time1 = tm1['lpBuffer']
+				time = time1.unpack('h*')[0].reverse.to_i(16)
+				
 
-				# Prints the results
-				print_line("#{pname}\t\t#{time}\t#{prun[0]}")
-	
-			client.railgun.kernel32.CloseHandle(handle['return'])
+
+			print_line("#{prun[0]}\t #{time}\t #{filename[20..-1]}")
+			
 		end
+
 	end
 
 
 
 	def run
-		
-		print_status("Searching for Prefetch Hive Value")
 
-                if not is_admin?
-                        print_error("You don't have enough privileges. Try getsystem.")
+		print_status("Searching for Prefetch Hive Value.")
 
-                end
+		if not is_admin?
+			
+			print_error("You don't have enough privileges. Try getsystem.")
+		end
 
 
-		begin
-		
+	begin
 
-		filename = 0
+		print_status("Running it..")
 
-		print_status("Running it...")
-		
 		sysnfo = client.sys.config.sysinfo['OS']
 
-                if sysnfo =~/(Windows XP|2003)/
-                        print_status("Detected Windows XP|2003")
-                        n_offset = 0x0010 #16 # Offset for NAME on XP/2003
-			h_offset = 0x004C # Offset for HASH on XP/2003
-			l_offset = 0x0078 # Offset for LastRun on XP/2003
-			c_offset = 0x0090 # Offset for RUN COUNT on XP/2003
-                else
-                        print_error("Error")
-                end
+		# Check to see what Windows Version is running.
+		# Needed for offsets.
 		
-		
-		check_stuff(n_offset, h_offset, l_offset, c_offset) # Runs everything ATM
-		print_good("All Done..")	
+		if sysnfo =~/(Windows XP|2003)/
 
+			print_status("Detected Windows XP/2003")
 
-
+			name_offset = 0x10 # Offset for EXE name in XP / 2003
+			hash_offset = 0x4C # Offset for hash in XP / 2003
+			lastrun_offset = 0x78 # Offset for LastRun in XP / 2003
+			runcount_offset = 0x90 # Offset for RunCount in XP / 2003
+		else
+			print_error("No offsets for this Windows version.")
 
 		end
+
+
+
+		prefetch_key_value
+		
+
+
+		# FIX: Needs to add a check if the path is found or not
+		
+		sysroot = client.fs.file.expand_path("%SYSTEMROOT%")
+		full_path = sysroot + "\\Prefetch\\"
+		file_type = "*.pf"
+		
+		getfile_prefetch_filenames = client.fs.file.search(full_path,file_type,recurse=false,timeout=-1)
+                getfile_prefetch_filenames.each do |file|
+                        if file.empty? or file.nil?
+
+				print_error("No files or not enough privileges.")
+			else
+				filename = File.join(file['path'], file['name'])
+				gather_info(name_offset, hash_offset, lastrun_offset, runcount_offset, filename)
+			end
+
+		end
+
+	end
+
+
+
+		print_good("EVERYTHING DONE")	
+
+
+
+
 	end
 end
