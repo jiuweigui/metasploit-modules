@@ -18,7 +18,7 @@ class Metasploit3 < Msf::Post
                         'Name'          =>      'Prefetch Tool',
                         'Description'   =>       %q{ Gathers information from Windows Prefetch files.},
                         'License'       =>      MSF_LICENSE,
-                        'Author'        =>      ['Timo Glad <fraktaali[at]gmail.com>'],
+                        'Author'        =>      ['jiuweigui <fraktaali[at]gmail.com>'],
                         'Platform'      =>      ['win'],
                         'SessionType'   =>      ['meterpreter']
                 ))
