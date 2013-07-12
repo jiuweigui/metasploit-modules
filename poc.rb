@@ -94,8 +94,9 @@ class Metasploit3 < Msf::Post
 				
 
 
-			print_line("#{prun[0]}\t #{time}\t #{filename[20..-1]}")
-			
+				print_line("#{prun[0]}\t #{time}\t #{filename[20..-1]}")
+				
+				client.railgun.kernel32.CloseHandle(handle)
 		end
 
 	end
