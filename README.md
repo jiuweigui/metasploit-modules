@@ -1,1 +1,1 @@
-Seriously broken stuff I'm currently working on.
+Metasploit-Framework modules that I've finished or currently working on.
